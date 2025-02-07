@@ -4,8 +4,8 @@ import (
 	"os"
 
 	ilog "github.com/hx-w/minidemo-encoder/internal/logger"
-	dem "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs"
-	events "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/events"
+	dem "github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs"
+	events "github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
 )
 
 type TickPlayer struct {
