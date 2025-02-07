@@ -5,7 +5,7 @@ import (
 
 	encoder "github.com/hx-w/minidemo-encoder/internal/encoder"
 	ilog "github.com/hx-w/minidemo-encoder/internal/logger"
-	common "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/common"
+	common "github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 )
 
 const Pi = 3.14159265358979323846
