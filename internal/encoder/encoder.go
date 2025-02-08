@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	ilog "github.com/hx-w/minidemo-encoder/internal/logger"
+	ilog "github.com/dxldb/minidemo-encoder/internal/logger"
 )
 
 const __MAGIC__ int32 = -559038737
