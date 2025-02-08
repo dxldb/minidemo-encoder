@@ -72,11 +72,6 @@ func Start(filePath string) {
 		}
 	})
 
-	// 包括开局准备时间
-	iParser.RegisterEventHandler(func(e events.RoundStart) {
-		roundStarted = 1
-		roundInFreezetime = 1
-	})
 
 	// 准备时间结束，正式开始
 	iParser.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
