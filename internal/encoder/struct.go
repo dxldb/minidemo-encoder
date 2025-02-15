@@ -2,6 +2,7 @@ package encoder
 
 type FrameInitInfo struct {
 	PlayerName string
+	PlayerSteamId64 uint64	
 	Position   [3]float32
 	Angles     [2]float32
 }

@@ -15,8 +15,8 @@ const FIELDS_ORIGIN int32 = 1 << 0
 const FIELDS_ANGLES int32 = 1 << 1
 const FIELDS_VELOCITY int32 = 1 << 2
 
-var bufMap map[string]*bytes.Buffer = make(map[string]*bytes.Buffer)
-var PlayerFramesMap map[string][]FrameInfo = make(map[string][]FrameInfo)
+var bufMap = make(map[uint64]*bytes.Buffer)
+var PlayerFramesMap = make(map[uint64][]FrameInfo)
 
 var saveDir string = "./output"
 
@@ -30,39 +30,39 @@ func init() {
 }
 
 func InitPlayer(initFrame FrameInitInfo) {
-	if bufMap[initFrame.PlayerName] == nil {
-		bufMap[initFrame.PlayerName] = new(bytes.Buffer)
+	if bufMap[initFrame.PlayerSteamId64] == nil {
+		bufMap[initFrame.PlayerSteamId64] = new(bytes.Buffer)
 	} else {
-		bufMap[initFrame.PlayerName].Reset()
+		bufMap[initFrame.PlayerSteamId64].Reset()
 	}
 	// step.1 MAGIC NUMBER
-	WriteToBuf(initFrame.PlayerName, __MAGIC__)
+	WriteToBuf(initFrame.PlayerSteamId64, __MAGIC__)
 
 	// step.2 VERSION
-	WriteToBuf(initFrame.PlayerName, __FORMAT_VERSION__)
+	WriteToBuf(initFrame.PlayerSteamId64, __FORMAT_VERSION__)
 
 	// step.3 timestamp
-	WriteToBuf(initFrame.PlayerName, int32(time.Now().Unix()))
+	WriteToBuf(initFrame.PlayerSteamId64, int32(time.Now().Unix()))
 
 	// step.4 name length
-	WriteToBuf(initFrame.PlayerName, int8(len(initFrame.PlayerName)))
+	WriteToBuf(initFrame.PlayerSteamId64, uint8(len(initFrame.PlayerName)))
 
 	// step.5 name
-	WriteToBuf(initFrame.PlayerName, []byte(initFrame.PlayerName))
+	WriteToBuf(initFrame.PlayerSteamId64, []byte(initFrame.PlayerName))
 
 	// step.6 initial position
 	for idx := 0; idx < 3; idx++ {
-		WriteToBuf(initFrame.PlayerName, float32(initFrame.Position[idx]))
+		WriteToBuf(initFrame.PlayerSteamId64, float32(initFrame.Position[idx]))
 	}
 
 	// step.7 initial angle
 	for idx := 0; idx < 2; idx++ {
-		WriteToBuf(initFrame.PlayerName, initFrame.Angles[idx])
+		WriteToBuf(initFrame.PlayerSteamId64, initFrame.Angles[idx])
 	}
 	// ilog.InfoLogger.Println("初始化成功: ", initFrame.PlayerName)
 }
 
-func WriteToRecFile(playerName string, roundNum int32, subdir string) {
+func WriteToRecFile(playerName string, playerSteamId64 uint64, roundNum int32, team string, subdir string , uniqueID int32) {
 	subDir := saveDir + "/round" + strconv.Itoa(int(roundNum)) + "/" + subdir
 	if ok, _ := PathExists(subDir); !ok {
 		os.MkdirAll(subDir, os.ModePerm)
@@ -75,52 +75,50 @@ func WriteToRecFile(playerName string, roundNum int32, subdir string) {
 	}
 	defer file.Close()
 
-	// step.8 tick count
-	var tickCount int32 = int32(len(PlayerFramesMap[playerName]))
-	WriteToBuf(playerName, tickCount)
+	// step.6 tick count
+	var tickCount = int32(len(PlayerFramesMap[playerSteamId64])) + 1
 
-	// step.9 bookmark count
-	WriteToBuf(playerName, int32(0))
+	WriteToBuf(playerSteamId64, tickCount)
 
 	// step.10 all bookmark
 	// ignore
 
 	// step.11 all tick frame
-	for _, frame := range PlayerFramesMap[playerName] {
-		WriteToBuf(playerName, frame.PlayerButtons)
-		WriteToBuf(playerName, frame.PlayerImpulse)
+	for _, frame := range PlayerFramesMap[playerSteamId64] {
+		WriteToBuf(playerSteamId64, frame.PlayerButtons)
+		WriteToBuf(playerSteamId64, frame.PlayerImpulse)
 		for idx := 0; idx < 3; idx++ {
-			WriteToBuf(playerName, frame.ActualVelocity[idx])
+			WriteToBuf(playerSteamId64, frame.ActualVelocity[idx])
 		}
 		for idx := 0; idx < 3; idx++ {
-			WriteToBuf(playerName, frame.PredictedVelocity[idx])
+			WriteToBuf(playerSteamId64, frame.PredictedVelocity[idx])
 		}
 		for idx := 0; idx < 2; idx++ {
-			WriteToBuf(playerName, frame.PredictedAngles[idx])
+			WriteToBuf(playerSteamId64, frame.PredictedAngles[idx])
 		}
-		WriteToBuf(playerName, frame.CSWeaponID)
-		WriteToBuf(playerName, frame.PlayerSubtype)
-		WriteToBuf(playerName, frame.PlayerSeed)
-		WriteToBuf(playerName, frame.AdditionalFields)
+		WriteToBuf(playerSteamId64, frame.CSWeaponID)
+		WriteToBuf(playerSteamId64, frame.PlayerSubtype)
+		WriteToBuf(playerSteamId64, frame.PlayerSeed)
+		WriteToBuf(playerSteamId64, frame.AdditionalFields)
 		// 附加信息
 		if frame.AdditionalFields&FIELDS_ORIGIN != 0 {
 			for idx := 0; idx < 3; idx++ {
-				WriteToBuf(playerName, frame.AtOrigin[idx])
+				WriteToBuf(playerSteamId64, frame.AtOrigin[idx])
 			}
 		}
 		if frame.AdditionalFields&FIELDS_ANGLES != 0 {
 			for idx := 0; idx < 3; idx++ {
-				WriteToBuf(playerName, frame.AtAngles[idx])
+				WriteToBuf(playerSteamId64, frame.AtAngles[idx])
 			}
 		}
 		if frame.AdditionalFields&FIELDS_VELOCITY != 0 {
 			for idx := 0; idx < 3; idx++ {
-				WriteToBuf(playerName, frame.AtVelocity[idx])
+				WriteToBuf(playerSteamId64, frame.AtVelocity[idx])
 			}
 		}
 	}
 
-	delete(PlayerFramesMap, playerName)
-	file.Write(bufMap[playerName].Bytes())
+	delete(PlayerFramesMap, playerSteamId64)
+	file.Write(bufMap[playerSteamId64].Bytes())
 	ilog.InfoLogger.Printf("[第%d回合] 选手录像保存成功: %s.rec\n", roundNum, playerName)
 }

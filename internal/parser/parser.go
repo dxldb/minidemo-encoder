@@ -37,7 +37,7 @@ func Start(filePath string) {
 			ctPlayers := gs.TeamCounterTerrorists().Members()
 			Players := append(tPlayers, ctPlayers...)
 			for _, player := range Players {
-				if player != nil {
+				if player != nil && player.IsAlive() {
 					var addonButton int32 = 0
 					key := TickPlayer{currentTick, player.SteamID64}
 					if val, ok := buttonTickMap[key]; ok {
@@ -49,6 +49,7 @@ func Start(filePath string) {
 			}
 		}
 	})
+
 
 	iParser.RegisterEventHandler(func(e events.WeaponFire) {
 		gs := iParser.GameState()
@@ -107,7 +108,7 @@ func Start(filePath string) {
 		for _, player := range Players {
 			if player != nil {
 				// save to rec file
-				saveToRecFile(player, int32(roundNum))
+					saveToRecFile(player, int32(roundNum))
 			}
 		}
 	})
