@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"math"
 	"os"
 
 	ilog "github.com/dxldb/minidemo-encoder/internal/logger"
