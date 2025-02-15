@@ -65,7 +65,7 @@ func InitPlayer(initFrame FrameInitInfo, realTick int) {
 	// ilog.InfoLogger.Println("初始化成功: ", initFrame.PlayerName)
 }
 
-func WriteToRecFile(playerName string, playerSteamId64 uint64, roundNum int32, team string, subdir string) {
+func WriteToRecFile(playerName string, playerSteamId64 uint64, roundNum int32, subdir string) {
 	subDir := saveDir + "/round" + strconv.Itoa(int(roundNum)) + "/" + subdir
 	if ok, _ := PathExists(subDir); !ok {
 		os.MkdirAll(subDir, os.ModePerm)
