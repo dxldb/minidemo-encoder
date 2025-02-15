@@ -26,7 +26,6 @@ func Start(filePath string) {
 
 	var connectedPlayerMap = make(map[uint64]int32)
 	var roundstart = false
-	var matchstart = false
 	var roundNum = 0
 	var realTick = 0
 	iParserHeader, err := iParser.ParseHeader()
@@ -41,7 +40,7 @@ func Start(filePath string) {
 		gs := iParser.GameState()
 		currentTick := gs.IngameTick()
 
-		if roundstart && matchstart {
+		if roundstart {
 			tPlayers := gs.TeamTerrorists().Members()
 			ctPlayers := gs.TeamCounterTerrorists().Members()
 			Players := append(tPlayers, ctPlayers...)
@@ -59,17 +58,6 @@ func Start(filePath string) {
 		}
 	})
 
-	iParser.RegisterEventHandler(func(e events.MatchStartedChanged) {
-		if e.NewIsStarted && !matchstart {
-			matchstart = true
-		}
-	})
-
-	iParser.RegisterEventHandler(func(e events.AnnouncementWinPanelMatch) {
-		if matchstart {
-			matchstart = false
-			}
-	})
 
 	iParser.RegisterEventHandler(func(e events.WeaponFire) {
 		gs := iParser.GameState()
@@ -130,12 +118,6 @@ func Start(filePath string) {
 		}
 	})
 
-
-	iParser.RegisterEventHandler(func(e events.PlayerConnect) {
-		if e.Player != nil {
-			connectedPlayerMap[e.Player.SteamID64] = int32(e.Player.EntityID - 1)
-		}
-	})
 	err = iParser.ParseToEnd()
 	checkError(err)
 }
