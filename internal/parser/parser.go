@@ -68,17 +68,6 @@ func Start(filePath string) {
 	iParser.RegisterEventHandler(func(e events.AnnouncementWinPanelMatch) {
 		if matchstart {
 			matchstart = false
-			gs := iParser.GameState()
-			tPlayers := gs.TeamTerrorists().Members()
-			ctPlayers := gs.TeamCounterTerrorists().Members()
-			Players := append(tPlayers, ctPlayers...)
-			for _, player := range Players {
-				if player != nil {
-					// save to rec file
-					saveToRecFile(player, int32(roundNum), connectedPlayerMap[player.SteamID64])
-				}
-			}
-		}
 	})
 
 	iParser.RegisterEventHandler(func(e events.WeaponFire) {
@@ -134,7 +123,7 @@ func Start(filePath string) {
 			Players := append(tPlayers, ctPlayers...)
 			for _, player := range Players {
 				if player != nil {
-					saveToRecFile(player, int32(roundNum), connectedPlayerMap[player.SteamID64])
+					saveToRecFile(player, int32(roundNum))
 				}
 			}
 		}
