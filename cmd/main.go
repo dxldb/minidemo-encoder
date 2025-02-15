@@ -14,5 +14,5 @@ func readArgs() string {
 }
 
 func main() {
-	iparser.Start("123.dem")
+	iparser.Start(readArgs())
 }
