@@ -29,7 +29,7 @@ func init() {
 	}
 }
 
-func InitPlayer(initFrame FrameInitInfo) {
+func InitPlayer(initFrame FrameInitInfo, realTick int) {
 	if bufMap[initFrame.PlayerSteamId64] == nil {
 		bufMap[initFrame.PlayerSteamId64] = new(bytes.Buffer)
 	} else {
@@ -40,6 +40,9 @@ func InitPlayer(initFrame FrameInitInfo) {
 
 	// step.2 VERSION
 	WriteToBuf(initFrame.PlayerSteamId64, __FORMAT_VERSION__)
+
+
+	WriteToBuf(initFrame.PlayerSteamId64, int16(realTick))
 
 	// step.3 timestamp
 	WriteToBuf(initFrame.PlayerSteamId64, int32(time.Now().Unix()))
@@ -62,10 +65,11 @@ func InitPlayer(initFrame FrameInitInfo) {
 	// ilog.InfoLogger.Println("初始化成功: ", initFrame.PlayerName)
 }
 
-func WriteToRecFile(playerName string, playerSteamId64 uint64, roundNum int32, subdir string) {
-	subDir := saveDir + "/round" + strconv.Itoa(int(roundNum)) + "/" + subdir
+func WriteToRecFile(playerName string, playerSteamId64 uint64, roundNum int32, team string, uniqueID int32) {
+	subDir := saveDir + "/round" + strconv.Itoa(int(roundNum)) + "/"
 	if ok, _ := PathExists(subDir); !ok {
 		os.MkdirAll(subDir, os.ModePerm)
+		ilog.InfoLogger.Println(subDir)
 	}
 	fileName := subDir + "/" + playerName + ".rec"
 	file, err := os.Create(fileName) // 创建文件, "binbin"是文件名字

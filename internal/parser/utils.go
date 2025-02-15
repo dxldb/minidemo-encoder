@@ -20,7 +20,7 @@ func checkError(err error) {
 	}
 }
 
-func parsePlayerInitFrame(player *common.Player) {
+func parsePlayerInitFrame(player *common.Player, realTick int) {
 	iFrameInit := encoder.FrameInitInfo{
 		PlayerName:      player.Name,
 		PlayerSteamId64: player.SteamID64,
@@ -31,7 +31,8 @@ func parsePlayerInitFrame(player *common.Player) {
 	iFrameInit.Angles[0] = float32(player.ViewDirectionY())
 	iFrameInit.Angles[1] = float32(player.ViewDirectionX())
 
-	encoder.InitPlayer(iFrameInit)
+	encoder.InitPlayer(iFrameInit, realTick)
+
 	delete(bufWeaponMap, player.SteamID64)
 	delete(encoder.PlayerFramesMap, player.SteamID64)
 
@@ -50,7 +51,7 @@ func radian2degree(radian float64) float64 {
 	return normalizeDegree(radian * 180 / Pi)
 }
 
-func parsePlayerFrame(player *common.Player, addonButton int32, tickrate float64, fullsnap bool) {
+func parsePlayerFrame(player *common.Player, addonButton int32, roundNum int, tickrate float64, fullsnap bool) {
 	if !player.IsAlive() {
 		return
 	}
@@ -154,10 +155,10 @@ func parsePlayerFrame(player *common.Player, addonButton int32, tickrate float64
 	encoder.PlayerFramesMap[player.SteamID64] = append(encoder.PlayerFramesMap[player.SteamID64], *iFrameInfo)
 }
 
-func saveToRecFile(player *common.Player, roundNum int32) {
+func saveToRecFile(player *common.Player, roundNum int32, uniqueID int32) {
 	if player.Team == common.TeamTerrorists {
-		encoder.WriteToRecFile(player.Name, player.SteamID64, roundNum, "t")
+		encoder.WriteToRecFile(player.Name, player.SteamID64, roundNum, "t", uniqueID)
 	} else {
-		encoder.WriteToRecFile(player.Name, player.SteamID64, roundNum, "ct")
+		encoder.WriteToRecFile(player.Name, player.SteamID64, roundNum, "ct", uniqueID)
 	}
 }

@@ -21,18 +21,26 @@ func Start(filePath string) {
 	defer iParser.Close()
 
 	// 处理特殊event构成的button表示
-	var buttonTickMap map[TickPlayer]int32 = make(map[TickPlayer]int32)
-	var (
-		roundStarted      = 0
-		roundInFreezetime = 0
-		roundNum          = 0
-	)
+	var buttonTickMap = make(map[TickPlayer]int32)
+
+	var connectedPlayerMap = make(map[uint64]int32)
+	var roundstart = false
+	var matchstart = false
+	var roundNum = 0
+	var realTick = 0
+	iParserHeader, err := iParser.ParseHeader()
+	if err == nil {
+		ilog.InfoLogger.Printf("demo实际Tick为：%d", int(math.Floor(iParserHeader.FrameRate()+0.5)))
+		ilog.InfoLogger.Printf("demo演示地图为: %s", iParserHeader.MapName)
+		realTick = int(math.Floor(iParserHeader.FrameRate() + 0.5))
+		ilog.InfoLogger.Println(iParserHeader.FrameRate())
+	}
 
 	iParser.RegisterEventHandler(func(e events.FrameDone) {
 		gs := iParser.GameState()
 		currentTick := gs.IngameTick()
 
-		if roundInFreezetime == 0 {
+		if roundstart && matchstart {
 			tPlayers := gs.TeamTerrorists().Members()
 			ctPlayers := gs.TeamCounterTerrorists().Members()
 			Players := append(tPlayers, ctPlayers...)
@@ -44,12 +52,33 @@ func Start(filePath string) {
 						addonButton = val
 						delete(buttonTickMap, key)
 					}
-					parsePlayerFrame(player, addonButton, iParser.TickRate(), false)
+					parsePlayerFrame(player, addonButton, roundNum, iParser.TickRate(), false)
 				}
 			}
 		}
 	})
 
+	iParser.RegisterEventHandler(func(e events.MatchStartedChanged) {
+		if e.NewIsStarted && !matchstart {
+			matchstart = true
+		}
+	})
+
+	iParser.RegisterEventHandler(func(e events.AnnouncementWinPanelMatch) {
+		if matchstart {
+			matchstart = false
+			gs := iParser.GameState()
+			tPlayers := gs.TeamTerrorists().Members()
+			ctPlayers := gs.TeamCounterTerrorists().Members()
+			Players := append(tPlayers, ctPlayers...)
+			for _, player := range Players {
+				if player != nil {
+					// save to rec file
+					saveToRecFile(player, int32(roundNum), connectedPlayerMap[player.SteamID64])
+				}
+			}
+		}
+	})
 
 	iParser.RegisterEventHandler(func(e events.WeaponFire) {
 		gs := iParser.GameState()
@@ -75,12 +104,11 @@ func Start(filePath string) {
 
 
 	// 准备时间结束，正式开始
-	iParser.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
-		roundInFreezetime = 0
-		roundNum += 1
-		ilog.InfoLogger.Println("回合开始：", roundNum)
+	iParser.RegisterEventHandler(func(e events.RoundStart) {
+		roundstart = true
+		roundNum++
+		ilog.InfoLogger.Printf("回合开始: %d tick: %d", roundNum, iParser.GameState().IngameTick())
 		// 初始化录像文件
-		// 写入所有选手的初始位置和角度
 		gs := iParser.GameState()
 		tPlayers := gs.TeamTerrorists().Members()
 		ctPlayers := gs.TeamCounterTerrorists().Members()
@@ -88,28 +116,33 @@ func Start(filePath string) {
 		for _, player := range Players {
 			if player != nil {
 				// parse player
-				parsePlayerInitFrame(player)
+				parsePlayerInitFrame(player, realTick)
 			}
 		}
 	})
 
-	// 回合结束，不包括自由活动时间
+
 	iParser.RegisterEventHandler(func(e events.RoundEnd) {
-		if roundStarted == 0 {
-			roundStarted = 1
-			roundNum = 0
-		}
-		ilog.InfoLogger.Println("回合结束：", roundNum)
-		// 结束录像文件
-		gs := iParser.GameState()
-		tPlayers := gs.TeamTerrorists().Members()
-		ctPlayers := gs.TeamCounterTerrorists().Members()
-		Players := append(tPlayers, ctPlayers...)
-		for _, player := range Players {
-			if player != nil {
-				// save to rec file
-					saveToRecFile(player, int32(roundNum))
+		if matchstart {
+			roundstart = false
+			ilog.InfoLogger.Printf("回合结束: %d tick: %d", roundNum, iParser.GameState().IngameTick())
+			// 结束录像文件
+			gs := iParser.GameState()
+			tPlayers := gs.TeamTerrorists().Members()
+			ctPlayers := gs.TeamCounterTerrorists().Members()
+			Players := append(tPlayers, ctPlayers...)
+			for _, player := range Players {
+				if player != nil {
+					saveToRecFile(player, int32(roundNum), connectedPlayerMap[player.SteamID64])
+				}
 			}
+		}
+	})
+
+
+	iParser.RegisterEventHandler(func(e events.PlayerConnect) {
+		if e.Player != nil {
+			connectedPlayerMap[e.Player.SteamID64] = int32(e.Player.EntityID - 1)
 		}
 	})
 	err = iParser.ParseToEnd()
