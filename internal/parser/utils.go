@@ -155,7 +155,7 @@ func parsePlayerFrame(player *common.Player, addonButton int32, roundNum int, ti
 	encoder.PlayerFramesMap[player.SteamID64] = append(encoder.PlayerFramesMap[player.SteamID64], *iFrameInfo)
 }
 
-func saveToRecFile(player *common.Player, roundNum int32, uniqueID int32) {
+func saveToRecFile(player *common.Player, roundNum int32) {
 	if player.Team == common.TeamTerrorists {
 		encoder.WriteToRecFile(player.Name, player.SteamID64, roundNum, "t")
 	} else {
