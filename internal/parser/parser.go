@@ -68,6 +68,7 @@ func Start(filePath string) {
 	iParser.RegisterEventHandler(func(e events.AnnouncementWinPanelMatch) {
 		if matchstart {
 			matchstart = false
+			}
 	})
 
 	iParser.RegisterEventHandler(func(e events.WeaponFire) {
