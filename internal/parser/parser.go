@@ -23,8 +23,6 @@ func Start(filePath string) {
 
 	// 处理特殊event构成的button表示
 	var buttonTickMap = make(map[TickPlayer]int32)
-
-	var connectedPlayerMap = make(map[uint64]int32)
 	var roundstart = false
 	var roundNum = 0
 	var realTick = 0
@@ -102,7 +100,6 @@ func Start(filePath string) {
 
 
 	iParser.RegisterEventHandler(func(e events.RoundEnd) {
-		if matchstart {
 			roundstart = false
 			ilog.InfoLogger.Printf("回合结束: %d tick: %d", roundNum, iParser.GameState().IngameTick())
 			// 结束录像文件
@@ -115,7 +112,6 @@ func Start(filePath string) {
 					saveToRecFile(player, int32(roundNum))
 				}
 			}
-		}
 	})
 
 	err = iParser.ParseToEnd()
