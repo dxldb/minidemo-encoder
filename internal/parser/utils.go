@@ -10,8 +10,8 @@ import (
 
 const Pi = 3.14159265358979323846
 
-var bufWeaponMap = make(map[uint64]int32)
-var playerLastZ  = make(map[uint64]float32)
+var bufWeaponMap map[string]int32 = make(map[string]int32)
+var playerLastZ map[string]float32 = make(map[string]float32)
 
 // Function to handle errors
 func checkError(err error) {
@@ -22,8 +22,7 @@ func checkError(err error) {
 
 func parsePlayerInitFrame(player *common.Player) {
 	iFrameInit := encoder.FrameInitInfo{
-		PlayerName:      player.Name,
-		PlayerSteamId64: player.SteamID64,
+		PlayerName: player.Name,
 	}
 	iFrameInit.Position[0] = float32(player.Position().X)
 	iFrameInit.Position[1] = float32(player.Position().Y)
@@ -32,11 +31,10 @@ func parsePlayerInitFrame(player *common.Player) {
 	iFrameInit.Angles[1] = float32(player.ViewDirectionX())
 
 	encoder.InitPlayer(iFrameInit)
+	delete(bufWeaponMap, player.Name)
+	delete(encoder.PlayerFramesMap, player.Name)
 
-	delete(bufWeaponMap, player.SteamID64)
-	delete(encoder.PlayerFramesMap, player.SteamID64)
-
-	playerLastZ[player.SteamID64] = float32(player.Position().Z)
+	playerLastZ[player.Name] = float32(player.Position().Z)
 }
 
 func normalizeDegree(degree float64) float64 {
@@ -51,7 +49,7 @@ func radian2degree(radian float64) float64 {
 	return normalizeDegree(radian * 180 / Pi)
 }
 
-func parsePlayerFrame(player *common.Player, addonButton int32, roundNum int, tickrate float64, fullsnap bool) {
+func parsePlayerFrame(player *common.Player, addonButton int32, tickrate float64, fullsnap bool) {
 	if !player.IsAlive() {
 		return
 	}
@@ -75,17 +73,17 @@ func parsePlayerFrame(player *common.Player, addonButton int32, roundNum int, ti
 	if player.ActiveWeapon() != nil {
 		currWeaponID = int32(WeaponStr2ID(player.ActiveWeapon().String()))
 	}
-	if len(encoder.PlayerFramesMap[player.SteamID64]) == 0 {
+	if len(encoder.PlayerFramesMap[player.Name]) == 0 {
 		iFrameInfo.CSWeaponID = currWeaponID
-		bufWeaponMap[player.SteamID64] = currWeaponID
-	} else if currWeaponID == bufWeaponMap[player.SteamID64] {
+		bufWeaponMap[player.Name] = currWeaponID
+	} else if currWeaponID == bufWeaponMap[player.Name] {
 		iFrameInfo.CSWeaponID = int32(CSWeapon_NONE)
 	} else {
 		iFrameInfo.CSWeaponID = currWeaponID
-		bufWeaponMap[player.SteamID64] = currWeaponID
+		bufWeaponMap[player.Name] = currWeaponID
 	}
 
-	lastIdx := len(encoder.PlayerFramesMap[player.SteamID64]) - 1
+	lastIdx := len(encoder.PlayerFramesMap[player.Name]) - 1
 	// addons
 	if fullsnap || (lastIdx < 2000 && (lastIdx+1)%int(tickrate) == 0) || (lastIdx >= 2000 && (lastIdx+1)%int(tickrate) == 0) {
 		// if false {
@@ -102,8 +100,8 @@ func parsePlayerFrame(player *common.Player, addonButton int32, roundNum int, ti
 		iFrameInfo.AtVelocity[2] = float32(player.Velocity().Z)
 	}
 	// record Z velocity
-	deltaZ := float32(player.Position().Z) - playerLastZ[player.SteamID64]
-	playerLastZ[player.SteamID64] = float32(player.Position().Z)
+	deltaZ := float32(player.Position().Z) - playerLastZ[player.Name]
+	playerLastZ[player.Name] = float32(player.Position().Z)
 
 	// velocity in Z direction need to be recorded specially
 	iFrameInfo.ActualVelocity[2] = deltaZ * float32(tickrate)
@@ -114,14 +112,14 @@ func parsePlayerFrame(player *common.Player, addonButton int32, roundNum int, ti
 	if lastIdx >= 0 { // not first frame
 		// We assume that actual velocity in tick N
 		// is influenced by predicted velocity in tick N-1
-		_preVel := &encoder.PlayerFramesMap[player.SteamID64][lastIdx].PredictedVelocity
+		_preVel := &encoder.PlayerFramesMap[player.Name][lastIdx].PredictedVelocity
 
 		// PV = 0.0 when AV(tick N-1) = 0.0 and AV(tick N) = 0.0 ?
 		// Note: AV=Actual Velocity, PV=Predicted Velocity
 		if !(iFrameInfo.ActualVelocity[0] == 0.0 &&
 			iFrameInfo.ActualVelocity[1] == 0.0 &&
-			encoder.PlayerFramesMap[player.SteamID64][lastIdx].ActualVelocity[0] == 0.0 &&
-			encoder.PlayerFramesMap[player.SteamID64][lastIdx].ActualVelocity[1] == 0.0) {
+			encoder.PlayerFramesMap[player.Name][lastIdx].ActualVelocity[0] == 0.0 &&
+			encoder.PlayerFramesMap[player.Name][lastIdx].ActualVelocity[1] == 0.0) {
 			var velAngle float64 = 0.0
 			if iFrameInfo.ActualVelocity[0] == 0.0 {
 				if iFrameInfo.ActualVelocity[1] < 0.0 {
@@ -152,13 +150,13 @@ func parsePlayerFrame(player *common.Player, addonButton int32, roundNum int, ti
 
 	}
 
-	encoder.PlayerFramesMap[player.SteamID64] = append(encoder.PlayerFramesMap[player.SteamID64], *iFrameInfo)
+	encoder.PlayerFramesMap[player.Name] = append(encoder.PlayerFramesMap[player.Name], *iFrameInfo)
 }
 
 func saveToRecFile(player *common.Player, roundNum int32) {
 	if player.Team == common.TeamTerrorists {
-		encoder.WriteToRecFile(player.Name, player.SteamID64, roundNum, "t")
+		encoder.WriteToRecFile(player.Name, roundNum, "t")
 	} else {
-		encoder.WriteToRecFile(player.Name, player.SteamID64, roundNum, "ct")
+		encoder.WriteToRecFile(player.Name, roundNum, "ct")
 	}
 }
