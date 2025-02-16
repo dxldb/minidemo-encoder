@@ -23,7 +23,7 @@ func PathExists(path string) (bool, error) {
 	return false, err
 }
 
-func WriteToBuf(key uint64, data interface{}) {
+func WriteToBuf(key string, data interface{}) {
 	if bufMap[key] == nil {
 		bufMap[key] = new(bytes.Buffer)
 	} else {
