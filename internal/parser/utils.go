@@ -20,7 +20,7 @@ func checkError(err error) {
 	}
 }
 
-func parsePlayerInitFrame(player *common.Player, realTick int) {
+func parsePlayerInitFrame(player *common.Player) {
 	iFrameInit := encoder.FrameInitInfo{
 		PlayerName:      player.Name,
 		PlayerSteamId64: player.SteamID64,
@@ -31,7 +31,7 @@ func parsePlayerInitFrame(player *common.Player, realTick int) {
 	iFrameInit.Angles[0] = float32(player.ViewDirectionY())
 	iFrameInit.Angles[1] = float32(player.ViewDirectionX())
 
-	encoder.InitPlayer(iFrameInit, realTick)
+	encoder.InitPlayer(iFrameInit)
 
 	delete(bufWeaponMap, player.SteamID64)
 	delete(encoder.PlayerFramesMap, player.SteamID64)
