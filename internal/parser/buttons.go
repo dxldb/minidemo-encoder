@@ -35,8 +35,7 @@ const (
 )
 
 func ButtonConvert(player *common.Player, addonButton int32) int32 {
-	var button = addonButton
-
+	var button int32 = addonButton
 	if player.Flags().DuckingKeyPressed() {
 		button |= IN_DUCK
 	}
