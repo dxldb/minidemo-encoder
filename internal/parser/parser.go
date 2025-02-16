@@ -1,9 +1,8 @@
 package parser
 
 import (
-	"math"
 	"os"
-
+	
 	ilog "github.com/dxldb/minidemo-encoder/internal/logger"
 	dem "github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs"
 	events "github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
@@ -22,28 +21,30 @@ func Start(filePath string) {
 	defer iParser.Close()
 
 	// 处理特殊event构成的button表示
-	var buttonTickMap = make(map[TickPlayer]int32)
-	var roundstart = false
-	var roundNum = 0
-	var realTick = 0
+	var buttonTickMap map[TickPlayer]int32 = make(map[TickPlayer]int32)
+	var (
+		roundStarted      = 0
+		roundInFreezetime = 0
+		roundNum          = 0
+	)
 	
 	iParser.RegisterEventHandler(func(e events.FrameDone) {
 		gs := iParser.GameState()
 		currentTick := gs.IngameTick()
 
-		if roundstart {
+		if roundInFreezetime == 0 {
 			tPlayers := gs.TeamTerrorists().Members()
 			ctPlayers := gs.TeamCounterTerrorists().Members()
 			Players := append(tPlayers, ctPlayers...)
 			for _, player := range Players {
-				if player != nil && player.IsAlive() {
+				if player != nil {
 					var addonButton int32 = 0
 					key := TickPlayer{currentTick, player.SteamID64}
 					if val, ok := buttonTickMap[key]; ok {
 						addonButton = val
 						delete(buttonTickMap, key)
 					}
-					parsePlayerFrame(player, addonButton, roundNum, iParser.TickRate(), false)
+					parsePlayerFrame(player, addonButton, iParser.TickRate(), false)
 				}
 			}
 		}
@@ -72,13 +73,12 @@ func Start(filePath string) {
 		}
 	})
 
-
-	// 准备时间结束，正式开始
+	// 包括开局准备时间
 	iParser.RegisterEventHandler(func(e events.RoundStart) {
-		roundstart = true
-		roundNum++
-		ilog.InfoLogger.Printf("回合开始: %d tick: %d", roundNum, iParser.GameState().IngameTick())
+		roundStarted = 1
+		roundInFreezetime = 1
 		// 初始化录像文件
+		// 写入所有选手的初始位置和角度
 		gs := iParser.GameState()
 		tPlayers := gs.TeamTerrorists().Members()
 		ctPlayers := gs.TeamCounterTerrorists().Members()
@@ -88,25 +88,35 @@ func Start(filePath string) {
 				// parse player
 				parsePlayerInitFrame(player)
 			}
+		}		
+	})
+	
+	// 准备时间结束，正式开始
+	iParser.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
+		roundInFreezetime = 0
+		roundNum += 1
+		ilog.InfoLogger.Println("回合开始：", roundNum)
+	})
+
+	// 回合结束，不包括自由活动时间
+	iParser.RegisterEventHandler(func(e events.RoundEnd) {
+		if roundStarted == 0 {
+			roundStarted = 1
+			roundNum = 0
+		}
+		ilog.InfoLogger.Println("回合结束：", roundNum)
+		// 结束录像文件
+		gs := iParser.GameState()
+		tPlayers := gs.TeamTerrorists().Members()
+		ctPlayers := gs.TeamCounterTerrorists().Members()
+		Players := append(tPlayers, ctPlayers...)
+		for _, player := range Players {
+			if player != nil {
+				// save to rec file
+				saveToRecFile(player, int32(roundNum))
+			}
 		}
 	})
-
-
-	iParser.RegisterEventHandler(func(e events.RoundEnd) {
-			roundstart = false
-			ilog.InfoLogger.Printf("回合结束: %d tick: %d", roundNum, iParser.GameState().IngameTick())
-			// 结束录像文件
-			gs := iParser.GameState()
-			tPlayers := gs.TeamTerrorists().Members()
-			ctPlayers := gs.TeamCounterTerrorists().Members()
-			Players := append(tPlayers, ctPlayers...)
-			for _, player := range Players {
-				if player != nil {
-					saveToRecFile(player, int32(roundNum))
-				}
-			}
-	})
-
 	err = iParser.ParseToEnd()
 	checkError(err)
 }
