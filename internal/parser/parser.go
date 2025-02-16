@@ -86,7 +86,7 @@ func Start(filePath string) {
 		for _, player := range Players {
 			if player != nil {
 				// parse player
-				parsePlayerInitFrame(player, realTick)
+				parsePlayerInitFrame(player)
 			}
 		}
 	})
