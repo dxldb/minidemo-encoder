@@ -26,14 +26,7 @@ func Start(filePath string) {
 	var roundstart = false
 	var roundNum = 0
 	var realTick = 0
-	iParserHeader, err := iParser.ParseHeader()
-	if err == nil {
-		ilog.InfoLogger.Printf("demo实际Tick为：%d", int(math.Floor(iParserHeader.FrameRate()+0.5)))
-		ilog.InfoLogger.Printf("demo演示地图为: %s", iParserHeader.MapName)
-		realTick = int(math.Floor(iParserHeader.FrameRate() + 0.5))
-		ilog.InfoLogger.Println(iParserHeader.FrameRate())
-	}
-
+	
 	iParser.RegisterEventHandler(func(e events.FrameDone) {
 		gs := iParser.GameState()
 		currentTick := gs.IngameTick()
