@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	iparser "github.com/hx-w/minidemo-encoder/internal/parser"
+	iparser "github.com/dxldb/minidemo-encoder/internal/parser"
 )
 
 func readArgs() string {
