@@ -1,4 +1,4 @@
-module github.com/hx-w/minidemo-encoder
+module github.com/dxldb/minidemo-encoder
 
 go 1.16
 
