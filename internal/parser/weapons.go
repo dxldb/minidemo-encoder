@@ -1,6 +1,6 @@
 package parser
 
-import ilog "github.com/hx-w/minidemo-encoder/internal/logger"
+import ilog "github.com/dxldb/minidemo-encoder/internal/logger"
 
 type CSWeaponID int32
 
