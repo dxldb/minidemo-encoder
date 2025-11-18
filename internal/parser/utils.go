@@ -3,8 +3,8 @@ package parser
 import (
 	"math"
 
-	encoder "github.com/hx-w/minidemo-encoder/internal/encoder"
-	ilog "github.com/hx-w/minidemo-encoder/internal/logger"
+	encoder "github.com/dxldb/minidemo-encoder/internal/encoder"
+	ilog "github.com/dxldb/minidemo-encoder/internal/logger"
 	common "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/common"
 )
 
@@ -62,6 +62,9 @@ func parsePlayerFrame(player *common.Player, addonButton int32, tickrate float64
 	iFrameInfo.ActualVelocity[2] = float32(player.Velocity().Z)
 	iFrameInfo.PredictedAngles[0] = player.ViewDirectionY()
 	iFrameInfo.PredictedAngles[1] = player.ViewDirectionX()
+	iFrameInfo.Origin[0] = float32(player.Position().X)
+	iFrameInfo.Origin[1] = float32(player.Position().Y)
+	iFrameInfo.Origin[2] = float32(player.Position().Z)
 	iFrameInfo.PlayerImpulse = 0
 	iFrameInfo.PlayerSeed = 0
 	iFrameInfo.PlayerSubtype = 0
