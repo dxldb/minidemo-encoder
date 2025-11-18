@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	ilog "github.com/hx-w/minidemo-encoder/internal/logger"
+	ilog "github.com/dxldb/minidemo-encoder/internal/logger"
 )
 
 const __MAGIC__ int32 = -559038737
@@ -98,6 +98,12 @@ func WriteToRecFile(playerName string, roundNum int32, subdir string) {
 		for idx := 0; idx < 2; idx++ {
 			WriteToBuf(playerName, frame.PredictedAngles[idx])
 		}
+		
+		// Origin (3 floats) 
+		for idx := 0; idx < 3; idx++ {
+			WriteToBuf(playerName, frame.Origin[idx])
+		}
+		
 		WriteToBuf(playerName, frame.CSWeaponID)
 		WriteToBuf(playerName, frame.PlayerSubtype)
 		WriteToBuf(playerName, frame.PlayerSeed)
