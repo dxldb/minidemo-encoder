@@ -78,9 +78,9 @@ func parsePlayerFrame(player *common.Player, addonButton int32, tickrate float64
 		iFrameInfo.AtOrigin[0] = float32(player.Position().X)
 		iFrameInfo.AtOrigin[1] = float32(player.Position().Y)
 		iFrameInfo.AtOrigin[2] = float32(player.Position().Z)
-		iFrameInfo.AdditionalFields |= encoder.FIELDS_ANGLES
-		iFrameInfo.AtAngles[0] = float32(player.ViewDirectionY())
-		iFrameInfo.AtAngles[1] = float32(player.ViewDirectionX())
+		// iFrameInfo.AdditionalFields |= encoder.FIELDS_ANGLES
+		// iFrameInfo.AtAngles[0] = float32(player.ViewDirectionY())
+		// iFrameInfo.AtAngles[1] = float32(player.ViewDirectionX())
 		iFrameInfo.AdditionalFields |= encoder.FIELDS_VELOCITY
 		iFrameInfo.AtVelocity[0] = float32(player.Velocity().X)
 		iFrameInfo.AtVelocity[1] = float32(player.Velocity().Y)
