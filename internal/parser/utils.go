@@ -54,41 +54,27 @@ func parsePlayerFrame(player *common.Player, addonButton int32, tickrate float64
 		return
 	}
 	iFrameInfo := new(encoder.FrameInfo)
+		// ----- button encode
+	iFrameInfo.PlayerButtons = ButtonConvert(player, addonButton)
+	iFrameInfo.PlayerImpulse = 0
 	iFrameInfo.PredictedVelocity[0] = 0.0
 	iFrameInfo.PredictedVelocity[1] = 0.0
 	iFrameInfo.PredictedVelocity[2] = 0.0
-	iFrameInfo.ActualVelocity[0] = float32(player.Velocity().X)
-	iFrameInfo.ActualVelocity[1] = float32(player.Velocity().Y)
-	iFrameInfo.ActualVelocity[2] = float32(player.Velocity().Z)
+	iFrameInfo.CSWeaponID = int32(CSWeapon_NONE)
+	iFrameInfo.PlayerSubtype = 0
+	iFrameInfo.PlayerSeed = 0
 	iFrameInfo.PredictedAngles[0] = player.ViewDirectionY()
 	iFrameInfo.PredictedAngles[1] = player.ViewDirectionX()
 	iFrameInfo.Origin[0] = float32(player.Position().X)
 	iFrameInfo.Origin[1] = float32(player.Position().Y)
 	iFrameInfo.Origin[2] = float32(player.Position().Z)
-	iFrameInfo.PlayerImpulse = 0
-	iFrameInfo.PlayerSeed = 0
-	iFrameInfo.PlayerSubtype = 0
-	// ----- button encode
-	iFrameInfo.PlayerButtons = ButtonConvert(player, addonButton)
-
-	// ---- weapon encode
-	var currWeaponID int32 = 0
-	if player.ActiveWeapon() != nil {
-		currWeaponID = int32(WeaponStr2ID(player.ActiveWeapon().String()))
-	}
-	if len(encoder.PlayerFramesMap[player.Name]) == 0 {
-		iFrameInfo.CSWeaponID = currWeaponID
-		bufWeaponMap[player.Name] = currWeaponID
-	} else if currWeaponID == bufWeaponMap[player.Name] {
-		iFrameInfo.CSWeaponID = int32(CSWeapon_NONE)
-	} else {
-		iFrameInfo.CSWeaponID = currWeaponID
-		bufWeaponMap[player.Name] = currWeaponID
-	}
+	iFrameInfo.ActualVelocity[0] = float32(player.Velocity().X)
+	iFrameInfo.ActualVelocity[1] = float32(player.Velocity().Y)
+	iFrameInfo.ActualVelocity[2] = float32(player.Velocity().Z)
 
 	lastIdx := len(encoder.PlayerFramesMap[player.Name]) - 1
 	// addons
-	if fullsnap || (lastIdx < 2000 && (lastIdx+1)%int(tickrate) == 0) || (lastIdx >= 2000 && (lastIdx+1)%int(tickrate) == 0) {
+	if fullsnap || (lastIdx < 10000 && (lastIdx+1)%int(tickrate) == 0) || (lastIdx >= 10000 && (lastIdx+1)%int(tickrate) == 0) {
 		// if false {
 		iFrameInfo.AdditionalFields |= encoder.FIELDS_ORIGIN
 		iFrameInfo.AtOrigin[0] = float32(player.Position().X)
@@ -152,7 +138,20 @@ func parsePlayerFrame(player *common.Player, addonButton int32, tickrate float64
 		}
 
 	}
-
+	// ---- weapon encode
+	var currWeaponID int32 = 0
+	if player.ActiveWeapon() != nil {
+		currWeaponID = int32(WeaponStr2ID(player.ActiveWeapon().String()))
+	}
+	if len(encoder.PlayerFramesMap[player.Name]) == 0 {
+		iFrameInfo.CSWeaponID = currWeaponID
+		bufWeaponMap[player.Name] = currWeaponID
+	} else if currWeaponID == bufWeaponMap[player.Name] {
+		iFrameInfo.CSWeaponID = int32(CSWeapon_NONE)
+	} else {
+		iFrameInfo.CSWeaponID = currWeaponID
+		bufWeaponMap[player.Name] = currWeaponID
+	}
 	encoder.PlayerFramesMap[player.Name] = append(encoder.PlayerFramesMap[player.Name], *iFrameInfo)
 }
 
