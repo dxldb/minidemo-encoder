@@ -1,5 +1,5 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/hx-w/minidemo-encoder)](https://goreportcard.com/report/github.com/hx-w/minidemo-encoder)
-# Mini Demo Encoder(目前可适配CSGOBetterBot插件,但有一些小bug不过影响应该不大)
+# Mini Demo Encoder
 
 此工具用于解析CS:GO Demo文件(.dem)中玩家数据，并输出 [**BotMimic**](https://github.com/peace-maker/botmimic) 可读的bot录制文件(.rec)
 
