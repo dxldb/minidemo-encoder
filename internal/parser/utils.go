@@ -11,7 +11,6 @@ import (
 const Pi = 3.14159265358979323846
 
 var bufWeaponMap map[string]int32 = make(map[string]int32)
-var playerLastZ map[string]float32 = make(map[string]float32)
 
 // Function to handle errors
 func checkError(err error) {
@@ -85,9 +84,6 @@ func parsePlayerFrame(player *common.Player, addonButton int32, tickrate float64
 		iFrameInfo.AtVelocity[0] = float32(player.Velocity().X)
 		iFrameInfo.AtVelocity[1] = float32(player.Velocity().Y)
 		iFrameInfo.AtVelocity[2] = float32(player.Velocity().Z)
-	// record Z velocity
-	deltaZ := float32(player.Position().Z) - playerLastZ[player.Name]
-	playerLastZ[player.Name] = float32(player.Position().Z)
 
 	// velocity in Z direction need to be recorded specially
 	iFrameInfo.ActualVelocity[2] = deltaZ * float32(tickrate)
