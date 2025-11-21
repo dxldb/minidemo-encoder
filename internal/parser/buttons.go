@@ -44,9 +44,6 @@ func ButtonConvert(player *common.Player, addonButton int32) int32 {
 	}
 	if player.IsReloading {
 		button |= IN_RELOAD
-	}
-	if player.IsScoped() {
-		button |= IN_ATTACK2
 	}	
 	return button
 }
