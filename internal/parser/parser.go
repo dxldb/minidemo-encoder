@@ -22,6 +22,7 @@ func Start(filePath string) {
 
 	// 处理特殊event构成的button表示
 	var buttonTickMap map[TickPlayer]int32 = make(map[TickPlayer]int32)
+	var playerLastScopedState map[uint64]bool = make(map[uint64]bool)
 	var (
 		roundStarted      = 0
 		roundInFreezetime = 0
@@ -44,6 +45,16 @@ func Start(filePath string) {
 						addonButton = val
 						delete(buttonTickMap, key)
 					}
+					steamID := player.SteamID64
+					currentScoped := player.IsScoped()
+					lastScoped, exists := playerLastScopedState[steamID]
+	
+					if !exists {
+						playerLastScopedState[steamID] = currentScoped
+					} else if currentScoped != lastScoped {
+						addonButton |= IN_ATTACK2
+						playerLastScopedState[steamID] = currentScoped
+					}					
 					parsePlayerFrame(player, addonButton, iParser.TickRate(), false)
 				}
 			}
