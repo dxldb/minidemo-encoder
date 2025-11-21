@@ -72,7 +72,7 @@ func parsePlayerFrame(player *common.Player, addonButton int32, tickrate float64
 
 	lastIdx := len(encoder.PlayerFramesMap[player.Name]) - 1
 	// addons
-	if fullsnap || (lastIdx < 2000 && (lastIdx+1)%int(tickrate) == 0) || (lastIdx >= 2000 && (lastIdx+1)%int(tickrate*10) == 0) {
+	if fullsnap || (lastIdx+1)%int(tickrate*2) == 0 {
 		iFrameInfo.AdditionalFields |= encoder.FIELDS_ORIGIN
 		iFrameInfo.AtOrigin[0] = float32(player.Position().X)
 		iFrameInfo.AtOrigin[1] = float32(player.Position().Y)
