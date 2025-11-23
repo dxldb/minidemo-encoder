@@ -1,10 +1,15 @@
 package parser
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	ilog "github.com/dxldb/minidemo-encoder/internal/logger"
 	dem "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs"
+	common "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/common"
 	events "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/events"
 )
 
@@ -12,13 +17,32 @@ type TickPlayer struct {
 	tick    int
 	steamid uint64
 }
-
+type C4HolderInfo struct {
+	RoundNum   int    `json:"round"`
+	PlayerName string `json:"player_name"`
+}
+var outputBaseDir string
+var allC4Holders []C4HolderInfo
 func Start(filePath string) {
 	iFile, err := os.Open(filePath)
 	checkError(err)
 
 	iParser := dem.NewParser(iFile)
 	defer iParser.Close()
+
+	demoFileName := filepath.Base(filePath)
+	demoName := strings.TrimSuffix(demoFileName, filepath.Ext(demoFileName))
+
+	outputBaseDir = filepath.Join("output", demoName)
+
+	err = os.MkdirAll(outputBaseDir, os.ModePerm)
+	if err != nil {
+		ilog.ErrorLogger.Printf("创建输出目录失败: %s\n", err.Error())
+		return
+	}
+	encoder.SetSaveDir(outputBaseDir)
+	ilog.InfoLogger.Printf("输出目录: %s", outputBaseDir)
+	allC4Holders = make([]C4HolderInfo, 0)
 
 	// 处理特殊event构成的button表示
 	var buttonTickMap map[TickPlayer]int32 = make(map[TickPlayer]int32)
@@ -28,7 +52,7 @@ func Start(filePath string) {
 		roundInFreezetime = 0
 		roundNum          = 0
 	)
-
+	allC4Holders = make([]C4HolderInfo, 0)
 	iParser.RegisterEventHandler(func(e events.FrameDone) {
 		gs := iParser.GameState()
 		currentTick := gs.IngameTick()
@@ -106,6 +130,7 @@ func Start(filePath string) {
 				parsePlayerInitFrame(player)
 			}
 		}
+		detectC4Holder(&gs, roundNum)
 	})
 
 	// 回合结束，不包括自由活动时间
@@ -129,4 +154,41 @@ func Start(filePath string) {
 	})
 	err = iParser.ParseToEnd()
 	checkError(err)
+}
+	
+func detectC4Holder(gs *dem.GameState, roundNum int) {
+	tPlayers := (*gs).TeamTerrorists().Members()
+
+	for _, player := range tPlayers {
+		if player == nil {
+			continue
+		}
+
+		for _, weapon := range player.Weapons() {
+			if weapon != nil && weapon.Type == common.EqBomb {
+				c4Info := C4HolderInfo{
+					RoundNum:   roundNum,
+					PlayerName: player.Name,
+				}
+				allC4Holders = append(allC4Holders, c4Info)
+
+				ilog.InfoLogger.Printf("  [C4检测] 回合 %d: %s 持有C4",
+					roundNum, player.Name)
+				return
+			}
+		}
+	}
+
+	ilog.InfoLogger.Printf("  [C4检测] ⚠ 回合 %d: 未检测到C4持有者", roundNum)
+}
+
+func saveC4HolderData() error {
+	c4File := filepath.Join(outputBaseDir, "c4_holders.json")
+
+	data, err := json.MarshalIndent(allC4Holders, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(c4File, data, 0644)
 }
