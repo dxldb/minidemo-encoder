@@ -126,8 +126,7 @@ func Start(filePath string) {
 				parsePlayerInitFrame(player)
 			}
 		}			
-		detectC4Holder(&gs, roundNum)
-	}			
+		detectC4Holder(&gs, roundNum)			
 	})
 
 	// 回合结束，不包括自由活动时间
