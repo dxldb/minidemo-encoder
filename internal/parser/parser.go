@@ -12,16 +12,6 @@ import (
 	common "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/common"
 	events "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/events"
 )
-
-type RoundInfo struct {
-	roundNum        int
-	freezetimeStart int
-	freezetimeEnd   int
-	roundEnd        int
-	inFreezeTime    bool
-	isHalftime      bool
-	started         bool
-}
 type TickPlayer struct {
 	tick    int
 	steamid uint64
@@ -60,45 +50,10 @@ func Start(filePath string) {
 		roundStarted      = 0
 		roundInFreezetime = 0
 		roundNum          = 0
-		currentRound       *RoundInfo
-		firstRoundDetected = false
-		gameStarted        = false
-		
 	)
 	iParser.RegisterEventHandler(func(e events.FrameDone) {
 		gs := iParser.GameState()
-		if !firstRoundDetected && !gameStarted {
-			tPlayers := gs.TeamTerrorists().Members()
-			ctPlayers := gs.TeamCounterTerrorists().Members()
-
-			if len(tPlayers) > 0 || len(ctPlayers) > 0 {
-				gameStarted = true
-				firstRoundDetected = true
-				roundNum = 1
-				currentTick := gs.IngameTick()
-
-				currentRound = &RoundInfo{
-					roundNum:        roundNum,
-					freezetimeStart: currentTick,
-					freezetimeEnd:   currentTick,
-					inFreezeTime:    true,
-					isHalftime:      false,
-					started:         false,
-				}
-				ilog.InfoLogger.Printf("====================================")
-				ilog.InfoLogger.Printf("检测到游戏已开始,初始化回合 %d (Tick: %d)", roundNum, currentTick)
-
-				Players := append(tPlayers, ctPlayers...)
-				for _, player := range Players {
-					if player != nil {
-						parsePlayerInitFrame(player)
-					}
-				}
-				currentRound.started = true
-			}
-		}		
 		currentTick := gs.IngameTick()
-
 		if roundInFreezetime == 0 {
 			tPlayers := gs.TeamTerrorists().Members()
 			ctPlayers := gs.TeamCounterTerrorists().Members()
@@ -121,7 +76,7 @@ func Start(filePath string) {
 						addonButton |= IN_ATTACK2
 						playerLastScopedState[steamID] = currentScoped
 					}					
-				parsePlayerFrame(player, addonButton, iParser.TickRate(), currentRound.inFreezeTime)
+				parsePlayerFrame(player, addonButton, iParser.TickRate(), false)
 				}
 			}
 		}
@@ -148,26 +103,6 @@ func Start(filePath string) {
 			buttonTickMap[key] = IN_JUMP
 		}
 	})
-
-	iParser.RegisterEventHandler(func(e events.BombPlantBegin) {
-		if e.Player == nil {
-			return
-		}
-
-		gs := iParser.GameState()
-		currentTick := gs.IngameTick()
-		key := TickPlayer{currentTick, e.Player.SteamID64}
-
-		if _, ok := buttonTickMap[key]; ok {
-			buttonTickMap[key] |= IN_USE
-		} else {
-			buttonTickMap[key] = IN_USE
-		}
-
-		ilog.InfoLogger.Printf("  [埋弹开始] %s 开始埋弹 (Tick: %d)",
-			e.Player.Name, currentTick)
-	})
-	
 	// 包括开局准备时间
 	iParser.RegisterEventHandler(func(e events.RoundStart) {
 		roundStarted = 1
@@ -179,24 +114,20 @@ func Start(filePath string) {
 		roundInFreezetime = 0
 		roundNum += 1
 		ilog.InfoLogger.Println("回合开始：", roundNum)
-		if currentRound != nil {
-			gs := iParser.GameState()
-			currentTick := gs.IngameTick()
-			currentRound.freezetimeEnd = currentTick
-			currentRound.inFreezeTime = false
-			// 初始化录像文件
-			// 写入所有选手的初始位置和角度
-			tPlayers := gs.TeamTerrorists().Members()
-			ctPlayers := gs.TeamCounterTerrorists().Members()
-			Players := append(tPlayers, ctPlayers...)
-			for _, player := range Players {
-				if player != nil {
-					// parse player
-					parsePlayerInitFrame(player)
-				}
-			}			
-			detectC4Holder(&gs, currentRound.roundNum)
+		gs := iParser.GameState()
+		// 初始化录像文件
+		// 写入所有选手的初始位置和角度
+		tPlayers := gs.TeamTerrorists().Members()
+		ctPlayers := gs.TeamCounterTerrorists().Members()
+		Players := append(tPlayers, ctPlayers...)
+		for _, player := range Players {
+			if player != nil {
+				// parse player
+				parsePlayerInitFrame(player)
+			}
 		}			
+		detectC4Holder(&gs, roundNum)
+	}			
 	})
 
 	// 回合结束，不包括自由活动时间
