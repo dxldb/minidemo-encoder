@@ -52,7 +52,6 @@ func Start(filePath string) {
 		roundInFreezetime = 0
 		roundNum          = 0
 	)
-	allC4Holders = make([]C4HolderInfo, 0)
 	iParser.RegisterEventHandler(func(e events.FrameDone) {
 		gs := iParser.GameState()
 		currentTick := gs.IngameTick()
