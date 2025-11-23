@@ -148,7 +148,8 @@ func Start(filePath string) {
 			}
 		}
 	})
-	
+	err = iParser.ParseToEnd()
+	checkError(err)
 	ilog.InfoLogger.Println("\n开始保存C4持有者数据...")
 	err = saveC4HolderData()
 	if err != nil {
@@ -156,8 +157,6 @@ func Start(filePath string) {
 	} else {
 		ilog.InfoLogger.Printf("C4数据已保存到: %s/c4_holders.json", outputBaseDir)
 	}	
-	err = iParser.ParseToEnd()
-	checkError(err)
 }
 	
 func detectC4Holder(gs *dem.GameState, roundNum int) {
