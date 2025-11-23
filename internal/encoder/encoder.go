@@ -19,7 +19,18 @@ var bufMap map[string]*bytes.Buffer = make(map[string]*bytes.Buffer)
 var PlayerFramesMap map[string][]FrameInfo = make(map[string][]FrameInfo)
 
 var saveDir string = "./output"
-
+func SetSaveDir(dir string) {
+	saveDir = dir
+	// 确保目录存在
+	if ok, _ := PathExists(saveDir); !ok {
+		err := os.MkdirAll(saveDir, os.ModePerm)
+		if err != nil {
+			ilog.ErrorLogger.Println("创建输出目录失败:", err.Error())
+		} else {
+			ilog.InfoLogger.Println("创建输出目录：", saveDir)
+		}
+	}
+}
 func init() {
 	if ok, _ := PathExists(saveDir); !ok {
 		os.Mkdir(saveDir, os.ModePerm)
