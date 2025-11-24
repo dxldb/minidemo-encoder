@@ -364,8 +364,6 @@ func Start(filePath string) {
 			currentTick := gs.IngameTick()
 			currentRound.roundEnd = currentTick
 
-			freezeDuration := getAdjustedTime(currentRound.freezetimeEnd-currentRound.freezetimeStart, iParser.TickRate())
-
 			ilog.InfoLogger.Printf("回合 %d 结束 (Tick: %d)", currentRound.roundNum, currentTick)
 
 			tPlayers := gs.TeamTerrorists().Members()
