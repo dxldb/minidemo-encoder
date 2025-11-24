@@ -317,15 +317,6 @@ func Start(filePath string) {
 		}
 
 		playerLastScopedState = make(map[uint64]bool)
-		tPlayers := gs.TeamTerrorists().Members()
-		ctPlayers := gs.TeamCounterTerrorists().Members()
-		Players := append(tPlayers, ctPlayers...)
-		for _, player := range Players {
-			if player != nil {
-				parsePlayerInitFrame(player)
-			}
-		}
-
 		currentRound.started = true
 	})
 
@@ -339,9 +330,16 @@ func Start(filePath string) {
 
 		if currentRound != nil {
 			currentTick := gs.IngameTick()
-
 			currentRound.freezetimeEnd = currentTick
 			currentRound.inFreezeTime = false
+			tPlayers := gs.TeamTerrorists().Members()
+			ctPlayers := gs.TeamCounterTerrorists().Members()
+			Players := append(tPlayers, ctPlayers...)
+			for _, player := range Players {
+					if player != nil {
+					parsePlayerInitFrame(player)
+				}
+			}
 		}
 	})
 
