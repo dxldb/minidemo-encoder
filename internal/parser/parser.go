@@ -846,6 +846,7 @@ func Start(filePath string) {
 
 		for _, player := range Players {
 			if player != nil {
+				parsePlayerInitFrame(player)
 				recordPlayerStartMoney(player, roundNum)
 				recordPlayerInfo(player)
 
@@ -881,18 +882,10 @@ func Start(filePath string) {
 			ilog.InfoLogger.Printf("回合 %d 冻结时间结束 (Tick: %d, 持续: %.2f秒)",
 				currentRound.roundNum, currentTick, freezeDuration)
 			ilog.InfoLogger.Printf("  购买时间延长至: Tick %d (+10秒)", currentRound.buyTimeEnd)
-			tPlayers := gs.TeamTerrorists().Members()
-			ctPlayers := gs.TeamCounterTerrorists().Members()
-			Players := append(tPlayers, ctPlayers...)
 
-			for _, player := range Players {
-				if player != nil {
-					parsePlayerInitFrame(player)
-				}
 			recordPlayersGrenades(&gs, currentRoundPurchases)
 			detectC4Holder(&gs, currentRound.roundNum)
-			}
-		}	
+		}
 	})
 
 	iParser.RegisterEventHandler(func(e events.RoundEnd) {
