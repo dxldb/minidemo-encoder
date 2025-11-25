@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hx-w/minidemo-encoder/internal/encoder"
-	ilog "github.com/hx-w/minidemo-encoder/internal/logger"
+	"github.com/dxldb/minidemo-encoder/internal/encoder"
+	ilog "github.com/dxldb/minidemo-encoder/internal/logger"
 	dem "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs"
 	common "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/common"
 	events "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/events"
