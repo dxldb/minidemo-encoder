@@ -179,7 +179,6 @@ func Start(filePath string) {
 	var buttonTickMap map[TickPlayer]int32 = make(map[TickPlayer]int32)
 	detectActualFrameRate(iParser)
 	var playerLastScopedState map[uint64]bool = make(map[uint64]bool)
-	var playerLastWeapons map[uint64][]string = make(map[uint64][]string)
 	var (
 		roundNum           = 0
 		currentRound       *RoundInfo
