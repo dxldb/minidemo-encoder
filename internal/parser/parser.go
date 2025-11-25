@@ -396,7 +396,6 @@ func Start(filePath string) {
 		}
 
 		playerLastScopedState = make(map[uint64]bool)
-		playerLastWeapons = make(map[uint64][]string)
 
 		currentRound.started = true
 	})
