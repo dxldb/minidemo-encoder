@@ -891,7 +891,8 @@ func Start(filePath string) {
 				}
 			recordPlayersGrenades(&gs, currentRoundPurchases)
 			detectC4Holder(&gs, currentRound.roundNum)
-		}
+			}
+		}	
 	})
 
 	iParser.RegisterEventHandler(func(e events.RoundEnd) {
