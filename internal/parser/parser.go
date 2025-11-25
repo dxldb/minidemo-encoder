@@ -39,15 +39,6 @@ var (
 	frameRateDetected bool    = false
 	shouldInterpolate bool    = false
 )
-
-// C4持有者记录
-type C4HolderInfo struct {
-	RoundNum   int    `json:"round"`
-	PlayerName string `json:"player_name"`
-}
-
-var allC4Holders []C4HolderInfo
-
 // 检测demo的实际帧率
 func detectActualFrameRate(parser dem.Parser) {
 	var (
@@ -263,75 +254,6 @@ func Start(filePath string) {
 		}
 	})
 
-	iParser.RegisterEventHandler(func(e events.BombPlantBegin) {
-		if e.Player == nil {
-			return
-		}
-
-		gs := iParser.GameState()
-
-		// 检查是否在热身
-		if gs.IsWarmupPeriod() {
-			return
-		}
-
-		currentTick := gs.IngameTick()
-		key := TickPlayer{currentTick, e.Player.SteamID64}
-
-		if _, ok := buttonTickMap[key]; ok {
-			buttonTickMap[key] |= IN_USE
-		} else {
-			buttonTickMap[key] = IN_USE
-		}
-
-		ilog.InfoLogger.Printf("  [埋弹开始] %s 开始埋弹 (Tick: %d)",
-			e.Player.Name, currentTick)
-	})
-
-	iParser.RegisterEventHandler(func(e events.BombPlantAborted) {
-		if e.Player == nil {
-			return
-		}
-
-		gs := iParser.GameState()
-
-		// 检查是否在热身
-		if gs.IsWarmupPeriod() {
-			return
-		}
-
-		currentTick := gs.IngameTick()
-
-		ilog.InfoLogger.Printf("  [埋弹中止] %s (Tick: %d)",
-			e.Player.Name, currentTick)
-	})
-
-	iParser.RegisterEventHandler(func(e events.BombPlanted) {
-		if e.Player == nil {
-			return
-		}
-
-		gs := iParser.GameState()
-
-		// 检查是否在热身
-		if gs.IsWarmupPeriod() {
-			return
-		}
-
-		currentTick := gs.IngameTick()
-
-		siteName := "未知"
-		switch e.Site {
-		case events.BombsiteA:
-			siteName = "A点"
-		case events.BombsiteB:
-			siteName = "B点"
-		}
-
-		ilog.InfoLogger.Printf("  [埋弹完成] %s 成功放置炸弹于 %s (Tick: %d)",
-			e.Player.Name, siteName, currentTick)
-	})
-
 	iParser.RegisterEventHandler(func(e events.GameHalfEnded) {
 		gs := iParser.GameState()
 
@@ -422,7 +344,6 @@ func Start(filePath string) {
 					parsePlayerInitFrame(player)
 				}
 			}
-			detectC4Holder(&gs, currentRound.roundNum)
 		}
 	})
 
@@ -477,62 +398,6 @@ func Start(filePath string) {
 	err = iParser.ParseToEnd()
 	checkError(err)
 
-	ilog.InfoLogger.Println("\n开始保存C4持有者数据...")
-	err = saveC4HolderData()
-	if err != nil {
-		ilog.ErrorLogger.Printf("保存C4数据失败: %s\n", err.Error())
-	} else {
-		ilog.InfoLogger.Printf("C4数据已保存到: %s/c4_holders.json", outputBaseDir)
-	}
-
 	ilog.InfoLogger.Printf("\n解析完成!所有回合录像已保存到 %s/ 目录", outputBaseDir)
 	ilog.InfoLogger.Printf("共解析 %d 个回合\n", roundNum)
-}
-
-func getTeamName(team common.Team) string {
-	switch team {
-	case common.TeamTerrorists:
-		return "T"
-	case common.TeamCounterTerrorists:
-		return "CT"
-	default:
-		return "Unknown"
-	}
-}
-
-func detectC4Holder(gs *dem.GameState, roundNum int) {
-	tPlayers := (*gs).TeamTerrorists().Members()
-
-	for _, player := range tPlayers {
-		if player == nil {
-			continue
-		}
-
-		for _, weapon := range player.Weapons() {
-			if weapon != nil && weapon.Type == common.EqBomb {
-				c4Info := C4HolderInfo{
-					RoundNum:   roundNum,
-					PlayerName: player.Name,
-				}
-				allC4Holders = append(allC4Holders, c4Info)
-
-				ilog.InfoLogger.Printf("  [C4检测] 回合 %d: %s 持有C4",
-					roundNum, player.Name)
-				return
-			}
-		}
-	}
-
-	ilog.InfoLogger.Printf("  [C4检测] ⚠ 回合 %d: 未检测到C4持有者", roundNum)
-}
-
-func saveC4HolderData() error {
-	c4File := filepath.Join(outputBaseDir, "c4_holders.json")
-
-	data, err := json.MarshalIndent(allC4Holders, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(c4File, data, 0644)
 }
