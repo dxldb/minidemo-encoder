@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	ilog "github.com/hx-w/minidemo-encoder/internal/logger"
+	ilog "github.com/dxldb/minidemo-encoder/internal/logger"
 	common "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/common"
 )
 
