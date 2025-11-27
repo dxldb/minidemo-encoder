@@ -3,7 +3,7 @@ package parser
 import (
 	"os"
 
-	"github.com/hx-w/minidemo-encoder/internal/encoder"
+	"github.com/dxldb/minidemo-encoder/internal/encoder"
 	ilog "github.com/dxldb/minidemo-encoder/internal/logger"
 	dem "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs"
 	events "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/events"
