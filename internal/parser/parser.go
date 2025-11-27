@@ -2,13 +2,15 @@ package parser
 
 import (
 	"os"
-
+	"path/filepath"
+	"strings"
+	
 	"github.com/dxldb/minidemo-encoder/internal/encoder"
 	ilog "github.com/dxldb/minidemo-encoder/internal/logger"
 	dem "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs"
 	events "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/events"
 )
-
+var outputBaseDir string
 type TickPlayer struct {
 	tick    int
 	steamid uint64
