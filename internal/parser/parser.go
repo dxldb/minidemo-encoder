@@ -16,7 +16,19 @@ type TickPlayer struct {
 func Start(filePath string) {
 	iFile, err := os.Open(filePath)
 	checkError(err)
+	demoFileName := filepath.Base(filePath)
+	demoName := strings.TrimSuffix(demoFileName, filepath.Ext(demoFileName))
 
+	outputBaseDir = filepath.Join("output", demoName)
+
+	err = os.MkdirAll(outputBaseDir, os.ModePerm)
+	if err != nil {
+		ilog.ErrorLogger.Printf("创建输出目录失败: %s\n", err.Error())
+		return
+	}
+
+	encoder.SetSaveDir(outputBaseDir)
+	ilog.InfoLogger.Printf("输出目录: %s", outputBaseDir)	
 	iParser := dem.NewParser(iFile)
 	defer iParser.Close()
 
